@@ -53,6 +53,7 @@ redis_arg0(struct msg *r)
     case MSG_REQ_REDIS_SCARD:
     case MSG_REQ_REDIS_SMEMBERS:
     case MSG_REQ_REDIS_SPOP:
+    case MSG_REQ_REDIS_SRANDMEMBER:
 
     case MSG_REQ_REDIS_ZCARD:
         return true;
@@ -192,7 +193,6 @@ redis_argn(struct msg *r)
     case MSG_REQ_REDIS_SREM:
     case MSG_REQ_REDIS_SUNION:
     case MSG_REQ_REDIS_SUNIONSTORE:
-    case MSG_REQ_REDIS_SRANDMEMBER:
 
     case MSG_REQ_REDIS_ZADD:
     case MSG_REQ_REDIS_ZINTERSTORE:
@@ -451,6 +451,10 @@ redis_parse_req(struct msg *r)
                 break;
 
             case 4:
+                if (str4icmp(m, 'p', 'i', 'n', 'g')) {
+                    r->type = MSG_REQ_REDIS_PING;
+                    break;
+                }
                 if (str4icmp(m, 'p', 't', 't', 'l')) {
                     r->type = MSG_REQ_REDIS_PTTL;
                     break;
@@ -930,20 +934,24 @@ redis_parse_req(struct msg *r)
             break;
 
         case SW_REQ_TYPE_LF:
-            switch (ch) {
-            case LF:
-                if (redis_argeval(r)) {
-                    state = SW_ARG1_LEN;
-                } else {
-                    state = SW_KEY_LEN;
-                }
-                break;
-
-            default:
-                goto error;
+            if (r->type == MSG_REQ_REDIS_PING) {
+                goto done; 
+            } else {
+	            switch (ch) {
+	            case LF:
+	                if (redis_argeval(r)) {
+	                    state = SW_ARG1_LEN;
+	                } else {
+	                    state = SW_KEY_LEN;
+	                }
+	                break;
+	
+	            default:
+	                goto error;
+	            }
+	
+	            break;
             }
-
-            break;
 
         case SW_KEY_LEN:
             if (r->token == NULL) {

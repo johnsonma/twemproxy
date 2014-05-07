@@ -356,9 +356,42 @@ req_recv_next(struct context *ctx, struct conn *conn, bool alloc)
     if (msg != NULL) {
         conn->rmsg = msg;
     }
-
     return msg;
 }
+
+static void
+ direct_reply(struct context *ctx, struct conn *conn, struct msg *smsg, char *_msg) {
+     struct mbuf * mbuf;
+  ssize_t n;
+  struct msg *resp = msg_get(conn, false, conn->redis);
+  if (resp == NULL) {
+      conn->err = errno;
+      return;
+  }
+  mbuf = STAILQ_LAST(&resp->mhdr, mbuf, next);
+  if (mbuf == NULL || mbuf_full(mbuf)) {
+      mbuf = mbuf_get();
+      if( mbuf == NULL){
+        return NC_ENOMEM;
+      }
+      mbuf_insert(&resp->mhdr, mbuf);
+      resp->pos = mbuf->pos;
+  }
+   smsg->peer = resp;
+   resp->peer = smsg;
+   
+   ASSERT(mbuf->end - mbuf->last > 0);
+   n = nc_snprintf(mbuf->last, 100, _msg);
+   
+   mbuf->last += n;
+   resp->mlen += n;
+   
+   resp->done = 1;
+   smsg->done = 1;
+   
+   event_add_out(ctx->evb, conn);
+   conn->enqueue_outq(ctx, conn, smsg);
+ }
 
 static bool
 req_filter(struct context *ctx, struct conn *conn, struct msg *msg)
@@ -386,6 +419,17 @@ req_filter(struct context *ctx, struct conn *conn, struct msg *msg)
         req_put(msg);
         return true;
     }
+    
+    /*
+     * Handle "PING\r\n"
+     */
+    if (msg->type == MSG_REQ_REDIS_PING) {
+        log_debug(LOG_INFO, "filter ping req %"PRIu64" from c %d", msg->id,
+                  conn->sd);
+        direct_reply(ctx, conn, msg, "+PONG\r\n");
+        log_error("test here1");
+    }
+    
 
     return false;
 }
