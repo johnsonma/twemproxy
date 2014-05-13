@@ -456,6 +456,7 @@ redis_parse_req(struct msg *r)
                     break;
                 }
                 if (str4icmp(m, 'q', 'u', 'i', 't')) {
+                    r->type = MSG_REQ_REDIS_QUIT;
                     r->quit = 1;
                     break;
                 }
