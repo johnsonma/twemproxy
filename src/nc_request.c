@@ -427,7 +427,7 @@ req_filter(struct context *ctx, struct conn *conn, struct msg *msg)
         log_debug(LOG_INFO, "filter ping req %"PRIu64" from c %d", msg->id,
                   conn->sd);
         direct_reply(ctx, conn, msg, "+PONG\r\n");
-        log_error("test here1");
+        return true;
     }
     
 
