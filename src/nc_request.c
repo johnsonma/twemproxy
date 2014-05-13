@@ -410,13 +410,14 @@ req_filter(struct context *ctx, struct conn *conn, struct msg *msg)
      * Handle "quit\r\n", which is the protocol way of doing a
      * passive close
      */
-    if (msg->quit || msg->type == MSG_REQ_REDIS_QUIT) {
+    if (msg->quit) {
         ASSERT(conn->rmsg == NULL);
         log_debug(LOG_INFO, "filter quit req %"PRIu64" from c %d", msg->id,
                   conn->sd);
         conn->eof = 1;
         conn->recv_ready = 0;
         req_put(msg);
+        direct_reply(ctx, conn, msg, "+OK\r\n");
         return true;
     }
     
