@@ -386,7 +386,6 @@ static void
    mbuf->last += n;
    resp->mlen += n;
    
-   resp->done = 1;
    smsg->done = 1;
    
    event_add_out(ctx->evb, conn);
