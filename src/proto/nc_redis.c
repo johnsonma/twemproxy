@@ -954,10 +954,9 @@ redis_parse_req(struct msg *r)
 	            default:
 	                goto error;
 	            }
-	
-	            break;
             }
-
+            break;
+            
         case SW_KEY_LEN:
             if (r->token == NULL) {
                 if (ch != '$') {
