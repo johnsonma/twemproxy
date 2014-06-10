@@ -935,7 +935,7 @@ redis_parse_req(struct msg *r)
             break;
 
         case SW_REQ_TYPE_LF:
-            if (r->type == MSG_REQ_REDIS_PING || r->type == MSG_REQ_REDIS_QUIT) {
+            if (r->type == MSG_REQ_REDIS_PING) {
                 goto done; 
             } else {
 	            switch (ch) {
