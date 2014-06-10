@@ -455,11 +455,7 @@ redis_parse_req(struct msg *r)
                     r->type = MSG_REQ_REDIS_PING;
                     break;
                 }
-                if (str4icmp(m, 'q', 'u', 'i', 't')) {
-                    r->type = MSG_REQ_REDIS_QUIT;
-                    r->quit = 1;
-                    break;
-                }
+                
                 if (str4icmp(m, 'p', 't', 't', 'l')) {
                     r->type = MSG_REQ_REDIS_PTTL;
                     break;
